@@ -767,6 +767,8 @@ int32_t json_object_get_int(const struct json_object *jso)
 			return INT32_MIN;
 		if (cdouble >= INT32_MAX)
 			return INT32_MAX;
+		// if (isnan(cdouble))
+		// 	return 0;
 		return (int32_t)cdouble;
 	case json_type_boolean: return JC_BOOL_C(jso)->c_boolean;
 	default: return 0;

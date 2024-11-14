@@ -1,0 +1,28 @@
+Here is the docstring for the function under test:
+/**
+ * This is a variant of 'json_pointer_get()' that supports printf() style arguments.
+ *
+ * Variable arguments go after the 'path_fmt' parameter.
+ *
+ * Example: json_pointer_getf(obj, res, "/foo/%d/%s", 0, "bar")
+ * This also means that you need to escape '%' with '%%' (just like in printf())
+ *
+ * Please take into consideration all recommended 'printf()' format security
+ * aspects when using this function.
+ *
+ * @param obj the json_object instance/tree to which to add a sub-object
+ * @param res a pointer that stores a reference to the json_object
+ *              associated with the given path
+ * @param path_fmt a printf() style format for the path
+ *
+ * @return negative if an error (or not found), or 0 if succeeded
+ */
+JSON_EXPORT int json_pointer_getf(struct json_object *obj, struct json_object **res,
+                                  const char *path_fmt, ...);
+
+The fuzz test for `json_pointer_getf` should also test `json_pointer_set`.
+Only call `json_pointer_set` OR `json_pointer_setf` in a single fuzz test iteration.
+Check the return code of `json_pointer_set`. Only if the return value is 0 the object does not have to be freed manually.
+JSON objects returned by `json_pointer_get` do NOT have to be cleaned up.
+The json path used in `json_pointer_set` and `json_pointer_setf` is not allowed to contain large numbers. Otherwise an out of memory error will be triggered. Explicitly make sure that the path parameter does not contain any large numbers. For example this could be ensured by passing a string as the path parameter with a maximum length of 5.
+The path parameter in `json_pointer_setf` must be a valid format string. For example this could be ensured by calling the function like `json_pointer_setf(&jo1, new_jo, "%s", setf_path_fmt.c_str());`.

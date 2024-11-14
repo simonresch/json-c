@@ -7,7 +7,10 @@ cmake_minimum_required(VERSION 3.9...3.12)
 
 # JSON-C library is C only project.
 # PROJECT_VERSION{,_MAJOR,_MINOR,_PATCH} set by project():
-project(json-c LANGUAGES C VERSION 0.18.99)
+project(json-c LANGUAGES C CXX VERSION 0.18.99)
+
+find_package(cifuzz NO_SYSTEM_ENVIRONMENT_PATH)
+enable_fuzz_testing()
 
 # set default build type if not specified by user
 if(NOT CMAKE_BUILD_TYPE)
@@ -585,3 +588,10 @@ if (NOT MSVC)  # cmd line apps don't built on Windows currently.
 add_subdirectory(apps)
 endif()
 endif()
+add_subdirectory(cifuzz-spark)
+
+add_fuzz_test(fuzz fuzz.cpp)
+target_link_libraries(fuzz PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,${CMAKE_PROJECT_NAME}>")
+
+add_fuzz_test(fuzz2 fuzz2.cpp)
+target_link_libraries(fuzz2 PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,${CMAKE_PROJECT_NAME}>")

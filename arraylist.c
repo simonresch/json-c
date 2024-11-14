@@ -33,6 +33,7 @@
 #error Unable to determine size of size_t
 #endif
 #endif
+#include <stdio.h>
 
 #include "arraylist.h"
 
@@ -161,7 +162,7 @@ int array_list_put_idx(struct array_list *arr, size_t idx, void *data)
 		/* Zero out the arraylist slots in between the old length
 		   and the newly added entry so we know those entries are
 		   empty.
-		   e.g. when setting array[7] in an array that used to be 
+		   e.g. when setting array[7] in an array that used to be
 		   only 5 elements longs, array[5] and array[6] need to be
 		   set to 0.
 		 */
