@@ -595,3 +595,10 @@ target_link_libraries(fuzz PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,${CMAKE_PROJECT
 
 add_fuzz_test(fuzz2 fuzz2.cpp)
 target_link_libraries(fuzz2 PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,${CMAKE_PROJECT_NAME}>")
+
+add_fuzz_test(fuzz3 fuzz3.cpp)
+target_link_libraries(fuzz3 PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,${CMAKE_PROJECT_NAME}>")
+add_fuzz_test(fuzz4 fuzz4.cpp)
+target_link_libraries(fuzz4 PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,${CMAKE_PROJECT_NAME}>")
+add_fuzz_test(fuzz5 fuzz5.cpp)
+target_link_libraries(fuzz5 PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,${CMAKE_PROJECT_NAME}>")

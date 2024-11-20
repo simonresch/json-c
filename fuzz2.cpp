@@ -1,54 +1,56 @@
-#include <assert.h>
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
-#include "json.h"
 #include <cifuzz/cifuzz.h>
 #include <fuzzer/FuzzedDataProvider.h>
 
-FUZZ_TEST_SETUP() {
-  // One time initialization tasks, e.g., memory allocation, file opening.
-}
+#include "json.h"
 
 FUZZ_TEST(const uint8_t *data, size_t size) {
-  // Initialize the FuzzedDataProvider with the input data
-  FuzzedDataProvider fdp(data, size);
+	FuzzedDataProvider fdp(data, size);
 
-  // Consume a string from the input data to use as JSON string
-  std::string json_str = fdp.ConsumeRandomLengthString(1024);
-
-  // Parse the JSON string
-  struct json_object *jo1 = json_tokener_parse(json_str.c_str());
-  if (jo1 == NULL) {
-    return;
+  struct json_tokener *tokener = json_tokener_new_ex(fdp.ConsumeIntegralInRange<int>(1, JSON_TOKENER_DEFAULT_DEPTH));
+  int flags = 0;
+  if (fdp.ConsumeBool()) {
+    flags |= JSON_TOKENER_VALIDATE_UTF8;
   }
-
-  // Consume a path string from the input data
-  std::string path = fdp.ConsumeRandomLengthString(5);
-
-  // Consume a string to use as format string for json_pointer_getf
-  std::string getf_path_fmt = fdp.ConsumeRandomLengthString(5);
-
-  // Test json_pointer_getf
-  struct json_object *jo2 = NULL;
-  json_pointer_getf(jo1, &jo2, "%s", getf_path_fmt.c_str());
-
-  // Test json_pointer_set
-  struct json_object *new_jo = json_object_new_object();
-  int set_result = json_pointer_set(&jo1, path.c_str(), new_jo);
-  if (set_result != 0) {
-    json_object_put(new_jo);
+  if (fdp.ConsumeBool()) {
+    flags |= JSON_TOKENER_ALLOW_TRAILING_CHARS;
   }
-
-  // Test json_pointer_setf
-  //std::string setf_path_fmt = fdp.ConsumeRandomLengthString(5);
-  std::string setf_path_fmt = fdp.ConsumeRemainingBytesAsString();
-  struct json_object *new_jo_setf = json_object_new_object();
-  int setf_result = json_pointer_setf(&jo1, new_jo_setf, "%s", setf_path_fmt.c_str());
-  if (setf_result != 0) {
-    json_object_put(new_jo_setf);
+  if (fdp.ConsumeBool()) {
+    flags |= JSON_TOKENER_STRICT;
   }
+  json_tokener_set_flags(tokener, flags);
 
-  // Clean up the main JSON object
-  json_object_put(jo1);
+	std::string path = fdp.ConsumeRandomLengthString(5);
+	std::string sub_json_str = fdp.ConsumeRandomLengthString(10);
+	bool use_format_string = fdp.ConsumeBool();
+	std::string json_str = fdp.ConsumeRemainingBytesAsString();
+
+	struct json_object *jo1 = json_tokener_parse_ex(tokener, json_str.c_str(), json_str.size());
+	if (jo1 == NULL) {
+    json_tokener_free(tokener);
+		return;
+	}
+
+	struct json_object *sub_json = json_tokener_parse(sub_json_str.c_str());
+	if (sub_json == NULL) {
+		json_object_put(jo1);
+    json_tokener_free(tokener);
+		return;
+	}
+
+	struct json_object *jo2 = NULL;
+	if (use_format_string) {
+    json_pointer_getf(jo1, &jo2, "%s", path.c_str());
+		if (json_pointer_setf(&jo1, sub_json, "%s", path.c_str())) {
+			json_object_put(sub_json);
+		}
+	} else {
+    json_pointer_get(jo1, path.c_str(), &jo2);
+		if (json_pointer_set(&jo1, path.c_str(), sub_json)) {
+			json_object_put(sub_json);
+		}
+	}
+
+	// Clean up the main JSON object
+	json_object_put(jo1);
+  json_tokener_free(tokener);
 }
