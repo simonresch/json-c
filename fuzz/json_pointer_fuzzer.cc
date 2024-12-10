@@ -36,6 +36,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 		json_pointer_getf(jo1, &jo2, "%s", path.c_str());
 		if (json_pointer_setf(&jo1, sub_json, "%s", path.c_str()))
 		{
+			// TODO: only for debugging
+			__builtin_trap();
 			json_object_put(sub_json);
 		}
 	} else {
